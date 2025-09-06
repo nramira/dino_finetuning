@@ -12,3 +12,8 @@ wheels/
 
 # DS_Store files
 .DS_Store
+
+# Labels and images
+.txt
+.jpg
+.png
