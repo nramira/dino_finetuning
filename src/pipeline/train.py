@@ -49,7 +49,7 @@ def run_pipeline(cfg: config.TrainingConfig = config.default_config) -> None:
 
     # Visualize loss, dice curves and some predictions
     visualizations.plot_training_history(history, title="DINO Segmentation Training History")
-    visualizations.visualize_batch(validation_dataloader, num_samples=4, alpha=0.5, model=model)
+    visualizations.visualize_batch(validation_dataloader, num_samples=5, alpha=0.5, model=model)
 
     # Final evaluation on validation set
     final_metrics = evaluation.evaluate_on_dataloader(
