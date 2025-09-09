@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from PIL import Image, ImageDraw
 from torch.utils.data import DataLoader, Dataset
+from transformers import AutoImageProcessor
 
 from src.logger import logging
 
@@ -20,11 +21,11 @@ class SemanticSegmentationDataset(Dataset):
     Attributes:
         images_dir (Path): Path to the directory containing image files
         labels_dir (Path): Path to the directory containing label files
-        processor: Image processor for transforming images
+        processor: (AutoImageProcessor) Image processor for transforming images
         image_files (List[Path]): Sorted list of image file paths
     """
 
-    def __init__(self, directory: Path, processor) -> None:
+    def __init__(self, directory: Path, processor: AutoImageProcessor) -> None:
         """
         Args:
             directory: Path to images and labels folder
@@ -135,7 +136,7 @@ class SemanticSegmentationDataset(Dataset):
 
 
 def create_dataloaders(
-    train_dir: Path, test_dir: Path, valid_dir: Path, processor=None, batch_size: int = 8
+    train_dir: Path, test_dir: Path, valid_dir: Path, processor: AutoImageProcessor = None, batch_size: int = 8
 ) -> Tuple[DataLoader, DataLoader]:
     """
     Create dataloaders for training, testing, and validation datasets.
