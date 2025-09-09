@@ -1,48 +1,37 @@
-from pathlib import Path
-
 import torch
 from transformers import AutoImageProcessor, AutoModel
 
-from src import visualizations
+from src import config, visualizations
 from src.components import dataloaders, engine, evaluation, loss, model_builder
 
-# Setup
-TRAIN_DIR: Path = Path("../data/BrainTumor/train")
-TEST_DIR: Path = Path("../data/BrainTumor/test")
-VALID_DIR: Path = Path("../data/BrainTumor/valid")
-CLASSES_NAMES: list[str] = ["background", "glioma", "meningioma", "pituitary"]
-BATCH_SIZE: int = 8
-NUM_EPOCHS: int = 5
-HEAD_HIDDEN_DIM: int = 256
-CROSS_ENTROPY_WEIGHT: float = 0.4
-DICE_WEIGHT: float = 0.6
-LEARNING_RATE: float = 1e-4
-BASE_MODEL_NAME: str = "facebook/dinov2-base"
 
-
-def run_pipeline() -> None:
+def run_pipeline(cfg: config.TrainingConfig = config.default_config) -> None:
     """Main training function"""
 
     # Initialize processor and model
-    processor = AutoImageProcessor.from_pretrained(BASE_MODEL_NAME, use_fast=True)
-    dino = AutoModel.from_pretrained(BASE_MODEL_NAME)
+    processor = AutoImageProcessor.from_pretrained(cfg.base_model_name, use_fast=True)
+    dino = AutoModel.from_pretrained(cfg.base_model_name)
 
     # Create dataloaders
     train_dataloader, test_dataloader, validation_dataloader = dataloaders.create_dataloaders(
-        train_dir=TRAIN_DIR, test_dir=TEST_DIR, valid_dir=VALID_DIR, processor=processor, batch_size=BATCH_SIZE
+        train_dir=cfg.train_dir,
+        test_dir=cfg.test_dir,
+        valid_dir=cfg.valid_dir,
+        processor=processor,
+        batch_size=cfg.batch_size,
     )
 
     # Wrap model with segmentation head
     model = model_builder.DINOSegmentation(
-        dino_model=dino, num_classes=len(CLASSES_NAMES), head_hidden_dim=HEAD_HIDDEN_DIM
+        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim
     )
 
     # Device agnostic setup
     device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 
     # Initialize loss and optimizer
-    criterion = loss.CombinedLoss(ce_weight=CROSS_ENTROPY_WEIGHT, dice_weight=DICE_WEIGHT)
-    optimizer = torch.optim.Adam(model.segmentation_head.parameters(), lr=LEARNING_RATE)
+    criterion = loss.CombinedLoss(ce_weight=cfg.cross_entropy_weight, dice_weight=cfg.dice_weight)
+    optimizer = torch.optim.Adam(model.segmentation_head.parameters(), lr=cfg.learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=3)
 
     # Training loop
@@ -54,8 +43,8 @@ def run_pipeline() -> None:
         optimizer=optimizer,
         scheduler=scheduler,
         device=device,
-        num_epochs=NUM_EPOCHS,
-        model_name=f"{BASE_MODEL_NAME}_segmentation",
+        num_epochs=cfg.num_epochs,
+        model_name=cfg.model_name,
     )
 
     # Visualize loss, dice curves and some predictions
