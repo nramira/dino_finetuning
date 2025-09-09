@@ -73,6 +73,11 @@ class TrainingConfig:
         return f"{self.base_model_name.replace('/', '_')}_segmentation"
 
     @property
+    def model_path(self) -> Path:
+        """Returns the full path to save the trained model."""
+        return self.model_save_dir / f"{self.model_name}.pth"
+
+    @property
     def device(self) -> str:
         """Returns the device to be used for training and inference."""
         return torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
