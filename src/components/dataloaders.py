@@ -8,7 +8,19 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class SemanticSegmentationDataset(Dataset):
-    """Dataset for semantic segmentation with polygon annotations"""
+    """
+    Dataset for semantic segmentation with polygon annotations.
+
+    Args:
+        directory: Path to images and labels folder
+        processor: Image processor for transforming images
+
+    Attributes:
+        images_dir (Path): Path to the directory containing image files
+        labels_dir (Path): Path to the directory containing label files
+        processor: Image processor for transforming images
+        image_files (List[Path]): Sorted list of image file paths
+    """
 
     def __init__(self, directory: Path, processor) -> None:
         """
@@ -28,9 +40,20 @@ class SemanticSegmentationDataset(Dataset):
         print(f"Found {len(self.image_files)} images in {self.images_dir}")
 
     def __len__(self) -> int:
+        """
+        Returns:
+            int: Number of images in the dataset
+        """
         return len(self.image_files)
 
-    def __getitem__(self, idx) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        """
+        Args:
+            idx: Index of the item to retrieve
+
+        Returns:
+            Dict[str, Any]: Dictionary containing pixel_values, mask, image_path, and original_image
+        """
         img_path = self.image_files[idx]
         image = Image.open(img_path)
 
@@ -49,7 +72,15 @@ class SemanticSegmentationDataset(Dataset):
         return {"pixel_values": pixel_values, "mask": mask_tensor, "image_path": img_path, "original_image": image}
 
     def _load_labels(self, labels_path: Path) -> List[Dict[str, Any]]:
-        """Load labels from text file"""
+        """
+        Process label file to extract polygon annotations.
+
+        Args:
+            labels_path: Path to the labels text file
+
+        Returns:
+            List[Dict[str, Any]]: List of label dictionaries containing class_id and vertices
+        """
         labels = []
 
         with open(labels_path, "r") as f:
@@ -70,7 +101,16 @@ class SemanticSegmentationDataset(Dataset):
         return labels
 
     def _create_segmentation_mask(self, labels: List[Dict[str, Any]], target_size: Tuple[int, int]) -> np.ndarray:
-        """Create segmentation mask from polygon vertices"""
+        """
+        Create segmentation mask from polygon vertices.
+
+        Args:
+            labels: List of label dictionaries containing class_id and vertices
+            target_size: Target dimensions (height, width) for the segmentation mask
+
+        Returns:
+            np.ndarray: Segmentation mask with class labels
+        """
         target_height, target_width = target_size
         mask = np.zeros((target_height, target_width), dtype=np.uint8)
 
@@ -95,14 +135,32 @@ class SemanticSegmentationDataset(Dataset):
 def create_dataloaders(
     train_dir: Path, test_dir: Path, valid_dir: Path, processor=None, batch_size: int = 8
 ) -> Tuple[DataLoader, DataLoader]:
-    """Create dataloaders for semantic segmentation"""
+    """
+    Create dataloaders for training, testing, and validation datasets.
+
+    Args:
+        train_dir: Path to training data directory
+        test_dir: Path to test data directory
+        valid_dir: Path to validation data directory
+        processor: Image processor for transforming images
+        batch_size: Number of samples per batch
+
+    Returns:
+        Tuple[DataLoader, DataLoader]: Train, test, and validation dataloaders
+    """
 
     train_dataset = SemanticSegmentationDataset(train_dir, processor=processor)
     test_dataset = SemanticSegmentationDataset(test_dir, processor=processor)
     validation_dataset = SemanticSegmentationDataset(valid_dir, processor=processor)
 
     def collate_fn(batch) -> Dict[str, Any]:
-        """Custom collate function for segmentation"""
+        """
+        Args:
+            batch: List of dataset items to collate into a batch
+
+        Returns:
+            Dict[str, Any]: Batched data with pixel_values, masks, image_paths, and original_images
+        """
         pixel_values = torch.stack([item["pixel_values"] for item in batch])
         masks = torch.stack([item["mask"] for item in batch])
         image_paths = [item["image_path"] for item in batch]
