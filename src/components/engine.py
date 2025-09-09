@@ -170,9 +170,10 @@ def train(
     best_test_dice = 0
     model.to(device)
 
+    logging.info("=" * 60)
     for epoch in tqdm(range(num_epochs), desc="Training Progress"):
         logging.info(f"\nEpoch {epoch + 1}/{num_epochs}")
-        logging.info("-" * 40)
+        logging.info("-" * 60)
 
         # Train
         train_loss, train_dice = train_epoch(model, train_dataloader, criterion, optimizer, device)

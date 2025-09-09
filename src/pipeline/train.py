@@ -55,11 +55,7 @@ def run_pipeline(cfg: config.TrainingConfig = config.default_config) -> None:
     visualizations.visualize_batch(validation_dataloader, num_samples=5, alpha=0.5, model=model)
     logging.info("Plotted training history and visualized batch")
 
-    final_metrics = evaluation.evaluate_on_dataloader(
-        model=model, dataloader=validation_dataloader, criterion=criterion, device=device
-    )
-    logging.info(f"Final evaluation metrics: {final_metrics}")
-
+    evaluation.evaluate_on_dataloader(model=model, dataloader=validation_dataloader, criterion=criterion, device=device)
     logging.info("Training pipeline finished.")
 
 
