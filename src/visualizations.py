@@ -9,6 +9,8 @@ import torch.nn as nn
 from PIL import Image
 from torch.utils.data import DataLoader
 
+from src.metrics import dice_score
+
 
 def plot_training_history(history: Dict[str, Any], title: str = "Training History") -> None:
     """
@@ -122,12 +124,12 @@ def visualize_batch(dataloader: DataLoader, num_samples: int = 4, alpha: float =
 
     for i, idx in enumerate(random_indices):
         # Top row: Original images
-        axes[0, i].imshow(dataset[idx]["original_images"])
+        axes[0, i].imshow(dataset[idx]["original_image"])
         axes[0, i].set_title(f"Original {i + 1}")
         axes[0, i].axis("off")
 
         # Middle row: Overlaid images
-        overlaid_image = overlay_mask(dataset[idx]["original_images"], dataset[idx]["masks"], alpha=alpha)
+        overlaid_image = overlay_mask(dataset[idx]["original_image"], dataset[idx]["mask"], alpha=alpha)
         axes[1, i].imshow(overlaid_image)
         axes[1, i].set_title(f"Ground truth mask {i + 1}")
         axes[1, i].axis("off")
@@ -139,11 +141,14 @@ def visualize_batch(dataloader: DataLoader, num_samples: int = 4, alpha: float =
             with torch.inference_mode():
                 pixel_values = dataset[idx]["pixel_values"].unsqueeze(0).to(device)
                 logits = model(pixel_values)
-                pred_mask = logits.argmax(dim=1).squeeze().cpu().numpy()
+
+                # Calculate dice scores and predicted mask
+                dice_scores = dice_score(logits, dataset[idx]["mask"].unsqueeze(0).to(device))
+                pred_mask = logits.argmax(dim=1).squeeze(0).cpu().numpy()
 
                 # Show the predicted mask
-                axes[2, i].imshow(overlay_mask(dataset[idx]["original_images"], pred_mask, alpha=alpha))
-                axes[2, i].set_title(f"Predicted {i + 1}")
+                axes[2, i].imshow(overlay_mask(dataset[idx]["original_image"], pred_mask, alpha=alpha))
+                axes[2, i].set_title(f"Predicted {i + 1}\nDice: {dice_scores['dice_mean']:.3f}")
                 axes[2, i].axis("off")
 
     # Add legend
