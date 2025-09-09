@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from src import config, metrics
+from src.logger import logging
 
 
 def evaluate_on_dataloader(
@@ -29,7 +30,7 @@ def evaluate_on_dataloader(
     total_loss = 0
     all_dice_scores = []
 
-    print("Evaluating on dataset...")
+    logging.info("Evaluating on dataset...")
 
     with torch.inference_mode():
         for batch in tqdm(dataloader, desc="Evaluating"):
