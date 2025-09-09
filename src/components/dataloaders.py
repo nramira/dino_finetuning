@@ -92,7 +92,7 @@ class SemanticSegmentationDataset(Dataset):
         return mask
 
 
-def create_segmentation_dataloaders(
+def create_dataloaders(
     train_dir: Path, test_dir: Path, valid_dir: Path, processor=None, batch_size: int = 8
 ) -> Tuple[DataLoader, DataLoader]:
     """Create dataloaders for semantic segmentation"""
