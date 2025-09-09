@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import numpy as np
@@ -7,7 +8,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from src.metrics import dice_score
+from src import metrics, utils
 
 
 def train_epoch(
@@ -56,7 +57,7 @@ def train_epoch(
 
         # Calculate dice score for each class
         with torch.inference_mode():
-            dice_scores = dice_score(logits, masks)
+            dice_scores = metrics.dice_score(logits, masks)
             all_dice_scores.append(dice_scores)
 
     # Average metrics
@@ -106,7 +107,7 @@ def test_epoch(
             total_loss += loss.item()
 
             # Calculate metrics
-            dice_scores = dice_score(logits, masks)
+            dice_scores = metrics.dice_score(logits, masks)
             all_dice_scores.append(dice_scores)
 
     # Average metrics
@@ -127,8 +128,8 @@ def train(
     optimizer: torch.optim.Optimizer,
     scheduler: ReduceLROnPlateau,
     device: torch.device,
-    num_epochs: int = 5,
-    model_name: str = "segmentation_model",
+    num_epochs: int,
+    model_name: str,
 ) -> Dict[str, Any]:
     """
     Reusable training function for segmentation models
@@ -184,6 +185,7 @@ def train(
         # Step scheduler
         scheduler.step(test_loss)
 
+        # Print epoch results
         print(f"Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
         print(f"Train Dice: {train_dice['dice_mean']:.4f}, Test Dice: {test_dice['dice_mean']:.4f}")
         print(
@@ -198,7 +200,6 @@ def train(
             history["best_test_dice"] = best_test_dice
             history["best_epoch"] = epoch + 1
 
-            model_path = f"models/{model_name}.pth"
-            torch.save(model.state_dict(), model_path)
+            utils.save_model(model, target_dir=Path("models"), model_name=f"{model_name}.pth")
 
     return history
