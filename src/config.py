@@ -48,7 +48,7 @@ class TrainingConfig:
     def __post_init__(self) -> None:
         """Initialize default values and validate configuration."""
         if self.classes_names is None:
-            self.classes_names = ["Background", "Glioma", "Meningioma", "Pituitary"]
+            self.classes_names = ["background", "glioma", "meningioma", "pituitary"]
 
         # Validation
         if self.cross_entropy_weight + self.dice_weight != 1.0:
