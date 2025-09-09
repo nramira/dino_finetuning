@@ -22,12 +22,9 @@ class DINOSegmentation(nn.Module):
         Initialize the DINO segmentation model.
 
         Args:
-            dino_model: Pre-trained DINO model (e.g., from transformers library)
-                       Must have a config.hidden_size attribute
+            dino_model: Pre-trained DINO model
             num_classes: Number of segmentation classes including background.
-                        Typically 4 for foreground/background + additional classes
             head_hidden_dim: Hidden dimension for the segmentation head layers.
-                           Should match DINO head dimension (256 for base model)
         """
         super().__init__()
         self.backbone = dino_model
@@ -57,8 +54,8 @@ class DINOSegmentation(nn.Module):
         Args:
             pixel_values: Input images tensor of shape [B, C, H, W] where:
                          - B: batch size
-                         - C: number of channels (typically 3 for RGB)
-                         - H, W: height and width (typically 224x224)
+                         - C: number of channels
+                         - H, W: height and width (224x224 after processing)
 
         Returns:
             torch.Tensor: Segmentation logits of shape [B, num_classes, H, W]
