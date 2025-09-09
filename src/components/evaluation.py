@@ -42,7 +42,7 @@ def evaluate_on_dataloader(
             total_loss += loss.item()
 
             # Calculate metrics
-            dice_scores = metrics.calculate_dice_score(logits, masks)
+            dice_scores = metrics.dice_score(logits, masks)
             all_dice_scores.append(dice_scores)
 
     # Calculate average metrics
