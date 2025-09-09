@@ -1,6 +1,11 @@
 from pathlib import Path
+from typing import Tuple
 
 import torch
+from transformers import AutoImageProcessor, AutoModel
+
+from src import config
+from src.components import model_builder
 
 
 def save_model(model: torch.nn.Module, target_dir: Path, model_name: str) -> None:
@@ -26,21 +31,27 @@ def save_model(model: torch.nn.Module, target_dir: Path, model_name: str) -> Non
     torch.save(obj=model.state_dict(), f=model_save_path)
 
 
-def load_model(model: torch.nn.Module, target_dir: Path, device: torch.device) -> torch.nn.Module:
+def load_model(cfg: config.TrainingConfig) -> Tuple[torch.nn.Module, AutoImageProcessor]:
     """
-    Loads a PyTorch model's state dictionary from a file and moves it to the specified device.
+    Loads a PyTorch model's state dictionary from a file.
 
     Args:
-        model (torch.nn.Module): A PyTorch model instance with the same architecture
-            as the saved model. The state_dict will be loaded into this model.
-        target_dir (Path): Path to the saved model file (.pth or .pt). This should
-            be the complete file path, not just the directory.
-        device (torch.device): The device to move the loaded model to (e.g., 'cpu', 'cuda').
-
+        cfg (config.TrainingConfig): Configuration object containing model parameters
     Returns:
-        torch.nn.Module: The model with loaded weights, moved to the specified device.
+        Tuple[torch.nn.Module, AutoImageProcessor]: Loaded model and image processor
     """
-    # Load in the saved state_dict()
-    model.load_state_dict(torch.load(f=target_dir))
+    # Load base model and image processor
+    processor = AutoImageProcessor.from_pretrained(cfg.base_model_name, use_fast=True)
+    dino = AutoModel.from_pretrained(cfg.base_model_name)
 
-    return model.to(device)
+    # Wrap base model in segmentation model
+    model = model_builder.DINOSegmentation(
+        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim
+    )
+
+    # Load weights
+    if not cfg.model_path.exists():
+        raise FileNotFoundError(f"Model file not found at {cfg.model_path}")
+    model.load_state_dict(torch.load(f=cfg.model_path))
+
+    return model, processor
