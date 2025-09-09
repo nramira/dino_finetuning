@@ -172,7 +172,7 @@ def train(
 
     logging.info("=" * 60)
     for epoch in tqdm(range(num_epochs), desc="Training Progress"):
-        logging.info(f"\nEpoch {epoch + 1}/{num_epochs}")
+        logging.info(f"Epoch {epoch + 1}/{num_epochs}")
         logging.info("-" * 60)
 
         # Train
