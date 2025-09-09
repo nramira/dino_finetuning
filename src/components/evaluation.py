@@ -56,23 +56,23 @@ def evaluate_on_dataloader(
         final_dice[key] = {"mean": np.mean(scores), "std": np.std(scores), "min": np.min(scores), "max": np.max(scores)}
 
     # Print results
-    print("\n" + "=" * 60)
-    print("RESULTS")
-    print("=" * 60)
-    print(f"Average Loss: {avg_loss:.4f}")
-    print(f"Overall Dice Score: {final_dice['dice_mean']['mean']:.4f} ± {final_dice['dice_mean']['std']:.4f}")
-    print("\nPer-Class Results:")
+    logging.info("\n" + "=" * 60)
+    logging.info("RESULTS")
+    logging.info("=" * 60)
+    logging.info(f"Average Loss: {avg_loss:.4f}")
+    logging.info(f"Overall Dice Score: {final_dice['dice_mean']['mean']:.4f} ± {final_dice['dice_mean']['std']:.4f}")
+    logging.info("\nPer-Class Results:")
 
     for i, class_name in enumerate(config.default_config.classes_names):
         dice_key = f"dice_{class_name}"
         if dice_key in final_dice:
             stats = final_dice[dice_key]
-            print(
+            logging.info(
                 f"  {class_name.capitalize():12}: {stats['mean']:.3f} ± {stats['std']:.3f} "
                 f"(min: {stats['min']:.3f}, max: {stats['max']:.3f})"
             )
 
-    print("=" * 60)
+    logging.info("=" * 60)
 
     return {
         "avg_loss": avg_loss,
