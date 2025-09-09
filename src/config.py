@@ -35,7 +35,7 @@ class TrainingConfig:
 
     # Training hyperparameters
     batch_size: int = 8
-    num_epochs: int = 5
+    num_epochs: int = 10
     learning_rate: float = 1e-4
 
     # Loss configuration
