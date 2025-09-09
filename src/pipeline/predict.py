@@ -91,8 +91,8 @@ if __name__ == "__main__":
     """
     # Select random validation image
     cfg = config.default_config
-    validation_images = list(cfg.valid_dir).glob("*.jpg")
-    random_sample = random.choice(validation_images)
+    validation_images = cfg.valid_dir / "images"
+    random_sample = random.choice(list(validation_images.glob("*.jpg")))
 
     # Predict on the random sample
     masked_image = predict(random_sample, cfg)
