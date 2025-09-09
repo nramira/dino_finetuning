@@ -6,6 +6,8 @@ import torch
 from PIL import Image, ImageDraw
 from torch.utils.data import DataLoader, Dataset
 
+from src.logger import logging
+
 
 class SemanticSegmentationDataset(Dataset):
     """
@@ -37,7 +39,7 @@ class SemanticSegmentationDataset(Dataset):
         self.image_files = list(self.images_dir.glob("*.jpg"))
         self.image_files.sort()
 
-        print(f"Found {len(self.image_files)} images in {self.images_dir}")
+        logging.info(f"Found {len(self.image_files)} images in {self.images_dir}")
 
     def __len__(self) -> int:
         """

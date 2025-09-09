@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from src import metrics, utils
+from src.logger import logging
 
 
 def train_epoch(
@@ -167,10 +168,11 @@ def train(
     }
 
     best_test_dice = 0
+    model.to(device)
 
     for epoch in tqdm(range(num_epochs), desc="Training Progress"):
-        print(f"\nEpoch {epoch + 1}/{num_epochs}")
-        print("-" * 40)
+        logging.info(f"\nEpoch {epoch + 1}/{num_epochs}")
+        logging.info("-" * 40)
 
         # Train
         train_loss, train_dice = train_epoch(model, train_dataloader, criterion, optimizer, device)
@@ -186,9 +188,9 @@ def train(
         scheduler.step(test_loss)
 
         # Print epoch results
-        print(f"Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
-        print(f"Train Dice: {train_dice['dice_mean']:.4f}, Test Dice: {test_dice['dice_mean']:.4f}")
-        print(
+        logging.info(f"Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
+        logging.info(f"Train Dice: {train_dice['dice_mean']:.4f}, Test Dice: {test_dice['dice_mean']:.4f}")
+        logging.info(
             f"Per-class Dice - Glioma: {test_dice['dice_glioma']:.3f}, "
             f"Meningioma: {test_dice['dice_meningioma']:.3f}, "
             f"Pituitary: {test_dice['dice_pituitary']:.3f}"
