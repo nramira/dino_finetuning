@@ -17,3 +17,6 @@ wheels/
 *.txt
 *.jpg
 *.png
+
+# Logs
+*.log
