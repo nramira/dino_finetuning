@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
+import torch
+
 
 @dataclass
 class TrainingConfig:
@@ -69,6 +71,11 @@ class TrainingConfig:
     def model_name(self) -> str:
         """Returns formatted model name for saving."""
         return f"{self.base_model_name.replace('/', '_')}_segmentation"
+
+    @property
+    def device(self) -> str:
+        """Returns the device to be used for training and inference."""
+        return torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 
 
 # Create default configuration instance
