@@ -15,9 +15,12 @@ class DINOSegmentation(nn.Module):
         feature_dim: Dimension of DINO features (hidden_size from config)
         head_hidden_dim: Hidden dimension for the segmentation head
         segmentation_head: Sequential convolutional layers for classification
+        dropout: Dropout rate for regularization in the segmentation head
     """
 
-    def __init__(self, dino_model: nn.Module, num_classes: int = 4, head_hidden_dim: int = 256) -> None:
+    def __init__(
+        self, dino_model: nn.Module, num_classes: int = 4, head_hidden_dim: int = 256, dropout: float = 0.1
+    ) -> None:
         """
         Initialize the DINO segmentation model.
 
@@ -31,6 +34,7 @@ class DINOSegmentation(nn.Module):
         self.num_classes = num_classes
         self.feature_dim = dino_model.config.hidden_size
         self.head_hidden_dim = head_hidden_dim
+        self.dropout = dropout
 
         # Freeze DINO parameters for feature extraction
         for param in self.backbone.parameters():
@@ -41,9 +45,11 @@ class DINOSegmentation(nn.Module):
             nn.Conv2d(self.feature_dim, self.head_hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(self.head_hidden_dim),
             nn.GELU(),
+            nn.Dropout(self.dropout),
             nn.Conv2d(self.head_hidden_dim, self.head_hidden_dim // 2, kernel_size=3, padding=1),
             nn.BatchNorm2d(self.head_hidden_dim // 2),
             nn.GELU(),
+            nn.Dropout(self.dropout),
             nn.Conv2d(self.head_hidden_dim // 2, num_classes, kernel_size=1),
         )
 
