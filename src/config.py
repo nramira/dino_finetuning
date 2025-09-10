@@ -18,6 +18,7 @@ class TrainingConfig:
         batch_size: Number of samples per batch
         num_epochs: Number of training epochs
         head_hidden_dim: Hidden dimension size for segmentation head
+        dropout: Dropout rate for segmentation head
         cross_entropy_weight: Weight for cross entropy loss in combined loss
         dice_weight: Weight for dice loss in combined loss
         learning_rate: Learning rate for optimizer
@@ -34,6 +35,7 @@ class TrainingConfig:
     classes_names: List[str] = None
     base_model_name: str = "facebook/dinov2-base"
     head_hidden_dim: int = 256
+    dropout: float = 0.1
 
     # Training hyperparameters
     batch_size: int = 8

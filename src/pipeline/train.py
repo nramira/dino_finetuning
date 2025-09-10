@@ -28,6 +28,12 @@ parser.add_argument(
     help="Hidden dimension for the segmentation head.",
 )
 parser.add_argument(
+    "--dropout",
+    type=float,
+    default=config.default_config.dropout,
+    help="Dropout rate for the segmentation head.",
+)
+parser.add_argument(
     "--ce_weight",
     type=float,
     default=config.default_config.cross_entropy_weight,
@@ -69,6 +75,7 @@ def create_config_from_args(args: argparse.Namespace) -> config.TrainingConfig:
         num_epochs=args.epochs,
         batch_size=args.batch_size,
         head_hidden_dim=args.head_hidden_dim,
+        dropout=args.dropout,
         cross_entropy_weight=args.ce_weight,
         dice_weight=args.dice_weight,
         base_model_name=args.base_model_name,
@@ -100,7 +107,7 @@ def run_pipeline(cfg: config.TrainingConfig) -> None:
     logging.info("Created dataloaders")
 
     model = model_builder.DINOSegmentation(
-        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim
+        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim, dropout=cfg.dropout
     )
     logging.info("Created segmentation model")
     logging.info(f"Using device: {cfg.device}")
