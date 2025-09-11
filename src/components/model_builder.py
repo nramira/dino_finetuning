@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,18 +15,31 @@ class DINOSegmentation(nn.Module):
         head_hidden_dim: Hidden dimension for the segmentation head
         segmentation_head: Sequential convolutional layers for classification
         dropout: Dropout rate for regularization in the segmentation head
+        image_size: Input image size (assumed square, e.g., 224)
+        patch_length: Number of patches along one dimension (image_size / patch_size)
+        num_patches: Total number of patches (patch_length squared)
+        token_offset: Number of tokens to skip (e.g., 1 for CLS token, 5 for CLS + 4 register tokens)
     """
 
     def __init__(
-        self, dino_model: nn.Module, num_classes: int = 4, head_hidden_dim: int = 256, dropout: float = 0.1
+        self,
+        dino_model: nn.Module,
+        token_offset: int,
+        num_classes: int,
+        head_hidden_dim: int,
+        dropout: float,
+        image_size: int,
     ) -> None:
         """
         Initialize the DINO segmentation model.
 
         Args:
             dino_model: Pre-trained DINO model
-            num_classes: Number of segmentation classes including background.
-            head_hidden_dim: Hidden dimension for the segmentation head layers.
+            token_offset: Number of tokens to skip
+            num_classes: Number of segmentation classes including background
+            head_hidden_dim: Hidden dimension for the segmentation head layers
+            dropout: Dropout rate for segmentation head
+            image_size: Input image size
         """
         super().__init__()
         self.backbone = dino_model
@@ -35,12 +47,14 @@ class DINOSegmentation(nn.Module):
         self.feature_dim = dino_model.config.hidden_size
         self.head_hidden_dim = head_hidden_dim
         self.dropout = dropout
+        self.image_size = image_size
+        self.patch_length = self.image_size // dino_model.config.patch_size  # (dinov2: 16, dinov3: 14)
+        self.num_patches = self.patch_length * self.patch_length
+        self.token_offset = token_offset
 
-        # Freeze DINO parameters for feature extraction
         for param in self.backbone.parameters():
             param.requires_grad = False
 
-        # Segmentation head
         self.segmentation_head = nn.Sequential(
             nn.Conv2d(self.feature_dim, self.head_hidden_dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(self.head_hidden_dim),
@@ -67,25 +81,24 @@ class DINOSegmentation(nn.Module):
             torch.Tensor: Segmentation logits of shape [B, num_classes, H, W]
                          where each pixel has logits for each class
         """
-        # Get DINO features
-        outputs = self.backbone(pixel_values)
+        batch_size = pixel_values.shape[0]
 
-        # Get patch embeddings (exclude CLS token)
-        patch_embeddings = outputs.last_hidden_state[:, 1:, :]  # [B, num_patches, feature_dim]
+        with torch.inference_mode():
+            outputs = self.backbone(pixel_values)
 
-        batch_size = patch_embeddings.shape[0]
-        num_patches = patch_embeddings.shape[1]
-        feature_dim = patch_embeddings.shape[2]
+        # Get patch embeddings (exclude CLS token and register tokens if present)
+        hidden_state = outputs.last_hidden_state
+        patch_embeddings = hidden_state.narrow(1, self.token_offset, self.num_patches)  # [B, num_patches, feature_dim]
 
-        # Use reshape and contiguous() to handle non-contiguous tensors caused by last_hidden_state slicing
-        patch_size = int(np.sqrt(num_patches))
-        patch_embeddings = patch_embeddings.reshape(batch_size, patch_size, patch_size, feature_dim)
-        patch_embeddings = patch_embeddings.permute(0, 3, 1, 2).contiguous()  # [B, feature_dim, H, W]
+        # Reshape to [B, feature_dim, H, W] to apply the segmentation head to the embedding vectors of each patch
+        patch_embeddings = patch_embeddings.transpose(1, 2).contiguous()  # [B, feature_dim, num_patches]
+        patch_embeddings = patch_embeddings.view(
+            batch_size, self.feature_dim, self.patch_length, self.patch_length
+        )  # [B, feature_dim, H, W]
 
-        # Apply segmentation head
         logits = self.segmentation_head(patch_embeddings)
 
         # Upsample to input resolution
-        logits = F.interpolate(logits, size=(224, 224), mode="bilinear", align_corners=False)
+        logits = F.interpolate(logits, size=(self.image_size, self.image_size), mode="bilinear", align_corners=False)
 
         return logits

@@ -42,11 +42,16 @@ def load_model(cfg: config.TrainingConfig) -> Tuple[torch.nn.Module, AutoImagePr
     """
     # Load base model and image processor
     processor = AutoImageProcessor.from_pretrained(cfg.base_model_name, use_fast=True)
-    dino = AutoModel.from_pretrained(cfg.base_model_name)
+    dino = AutoModel.from_pretrained(cfg.base_model_name, token=cfg.huggingface_token)
 
     # Wrap base model in segmentation model
     model = model_builder.DINOSegmentation(
-        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim
+        dino_model=dino,
+        token_offset=cfg.token_offset,
+        num_classes=cfg.num_classes,
+        head_hidden_dim=cfg.head_hidden_dim,
+        dropout=cfg.dropout,
+        image_size=cfg.image_size,
     )
 
     # Load weights

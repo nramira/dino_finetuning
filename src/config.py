@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List
@@ -18,12 +19,14 @@ class TrainingConfig:
         batch_size: Number of samples per batch
         num_epochs: Number of training epochs
         head_hidden_dim: Hidden dimension size for segmentation head
+        image_size: Input image size for the model
         dropout: Dropout rate for segmentation head
         cross_entropy_weight: Weight for cross entropy loss in combined loss
         dice_weight: Weight for dice loss in combined loss
         learning_rate: Learning rate for optimizer
         base_model_name: Pretrained model name from HuggingFace
         model_save_dir: Directory to save trained models
+        token_offset: Number of tokens to skip based on the base model
     """
 
     # Data paths
@@ -33,8 +36,9 @@ class TrainingConfig:
 
     # Model configuration
     classes_names: List[str] = None
-    base_model_name: str = "facebook/dinov2-base"
+    base_model_name: str = "facebook/dinov3-vitb16-pretrain-lvd1689m"  # or "facebook/dinov2-base"
     head_hidden_dim: int = 256
+    image_size: int = 224
     dropout: float = 0.1
 
     # Training hyperparameters
@@ -64,6 +68,11 @@ class TrainingConfig:
         if self.num_epochs <= 0:
             raise ValueError("Number of epochs must be positive")
 
+        if self.base_model_name not in ["facebook/dinov2-base", "facebook/dinov3-vitb16-pretrain-lvd1689m"]:
+            raise ValueError(
+                "Base model name must be a DINO model (e.g., 'facebook/dinov2-base', 'facebook/dinov3-vitb16-pretrain-lvd1689m')"
+            )
+
     @property
     def num_classes(self) -> int:
         """Returns the number of classes."""
@@ -83,6 +92,19 @@ class TrainingConfig:
     def device(self) -> str:
         """Returns the device to be used for training and inference."""
         return torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+
+    @property
+    def token_offset(self) -> int:
+        """Returns the token offset based on the base model."""
+        if "dinov3" in self.base_model_name:
+            return 5  # Skip CLS token + 4 register tokens
+        else:
+            return 1  # Skip only CLS token
+
+    @property
+    def huggingface_token(self) -> str:
+        """Returns the HuggingFace token from environment variable."""
+        return os.getenv("HUGGINGFACE_TOKEN", None)
 
 
 # Create default configuration instance
