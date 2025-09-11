@@ -94,7 +94,7 @@ def run_pipeline(cfg: config.TrainingConfig) -> None:
     logging.info("Starting training pipeline...")
 
     processor = AutoImageProcessor.from_pretrained(cfg.base_model_name, use_fast=True)
-    dino = AutoModel.from_pretrained(cfg.base_model_name)
+    dino = AutoModel.from_pretrained(cfg.base_model_name, token=cfg.huggingface_token)
     logging.info(f"Loaded pre-trained model and image processor from {cfg.base_model_name}")
 
     train_dataloader, test_dataloader, validation_dataloader = dataloaders.create_dataloaders(
@@ -107,7 +107,12 @@ def run_pipeline(cfg: config.TrainingConfig) -> None:
     logging.info("Created dataloaders")
 
     model = model_builder.DINOSegmentation(
-        dino_model=dino, num_classes=cfg.num_classes, head_hidden_dim=cfg.head_hidden_dim, dropout=cfg.dropout
+        dino_model=dino,
+        token_offset=cfg.token_offset,
+        num_classes=cfg.num_classes,
+        head_hidden_dim=cfg.head_hidden_dim,
+        dropout=cfg.dropout,
+        image_size=cfg.image_size,
     )
     logging.info("Created segmentation model")
     logging.info(f"Using device: {cfg.device}")
