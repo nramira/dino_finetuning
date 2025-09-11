@@ -11,6 +11,7 @@ dependencies = [
     "notebook>=7.4.5",
     "python-multipart>=0.0.20",
     "scikit-learn>=1.7.1",
+    "tensorboard>=2.20.0",
     "torch>=2.8.0",
     "torchinfo>=1.8.0",
     "torchvision>=0.23.0",
