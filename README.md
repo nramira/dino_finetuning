@@ -145,7 +145,7 @@ The training pipeline accepts various command-line arguments for configuration:
 - `--dropout`: Dropout rate for the segmentation head
 - `--ce_weight`: Weight for cross entropy loss
 - `--dice_weight`: Weight for dice loss
-- `--base_model_name`: Pretrained model name from HuggingFace
+- `--base_model_name`: Pretrained model name from Hugging Face
 - `--lr`: Learning rate for optimizer
 
 **Example Usage:**
