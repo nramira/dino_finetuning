@@ -4,7 +4,7 @@ A comprehensive benchmarking study comparing DINOv2 and DINOv3 vision transforme
 
 ## Project Overview
 
-This project evaluates Facebook's latest DINOv3 foundation model against its predecessor DINOv2 for medical image analysis. Using transfer learning with custom segmentation heads, I achieved a **0.0337 Dice Score improvement** on brain tumor segmentation validation data, demonstrating the superior feature quality of DINOv3.
+This project evaluates Facebook's latest DINOv3 foundation model against its predecessor DINOv2 for medical image analysis. Using transfer learning with custom segmentation heads, I achieved a **4.16% Dice Score improvement** on brain tumor segmentation validation data, demonstrating the superior feature quality of DINOv3.
 
 ## Key Achievements
 
@@ -23,13 +23,23 @@ Brain tumor MRI scans from [Kaggle Medical Image Dataset](https://www.kaggle.com
 
 Dataset includes detailed polygon annotations with vertex coordinates defining tumor boundaries for precise semantic segmentation tasks.
 
+### Dataset Statistics
+- **Training Set**: 2,144 images
+- **Validation Set**: 612 images  
+- **Test Set**: 308 images
+- **Image Resolution**: 640×640 pixels (resized to 224×224 for model input)
+- **Total Images**: 3,064 annotated brain MRI scans
+
+![Class Distribution](class_distribution.png)
+*Distribution of tumor types across training, validation, and test splits*
+
 ## Technical Implementation
 
 ### Architecture
 
 #### Vision Transformer Backbones (~80M parameters each)
 
-**DINOv2-base**:
+**DINOv2-base** ([Paper](https://arxiv.org/abs/2304.07193)):
 - **Layers**: 12 transformer layers
 - **Hidden Size**: 768 dimensions
 - **Attention Heads**: 12 heads
@@ -38,7 +48,7 @@ Dataset includes detailed polygon annotations with vertex coordinates defining t
 - **Tokens**: 257 total (1 CLS + 256 patch tokens)
 - **Key Features**: LayerScale, GELU activation, QKV bias
 
-**DINOv3-ViT-B/16**:
+**DINOv3-ViT-B/16** ([Paper](https://arxiv.org/abs/2508.10104)):
 - **Layers**: 12 transformer layers  
 - **Hidden Size**: 768 dimensions
 - **Attention Heads**: 12 heads
