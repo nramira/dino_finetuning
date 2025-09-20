@@ -1,6 +1,6 @@
 # DINOv3 Medical Image Segmentation Benchmark
 
-A comprehensive benchmarking study comparing DINOv2 and DINOv3 vision transformers for brain tumor semantic segmentation using transfer learning.
+A benchmarking study comparing DINOv2 and DINOv3 vision transformers for brain tumor semantic segmentation using transfer learning.
 
 ## Project Overview
 
@@ -136,6 +136,19 @@ The PCA visualization technique reproduced from the DINOv3 paper revealed:
 ## Quick Start
 
 ### Training
+The training pipeline accepts various command-line arguments for configuration:
+
+**Available Parameters:**
+- `--epochs`: Number of training epochs
+- `--batch_size`: Batch size for data loaders
+- `--head_hidden_dim`: Hidden dimension for the segmentation head
+- `--dropout`: Dropout rate for the segmentation head
+- `--ce_weight`: Weight for cross entropy loss
+- `--dice_weight`: Weight for dice loss
+- `--base_model_name`: Pretrained model name from HuggingFace
+- `--lr`: Learning rate for optimizer
+
+**Example Usage:**
 ```bash
 python src/pipeline/train.py --epochs 10 --batch_size 8 --base_model facebook/dinov3-vitb16-pretrain-lvd1689m
 ```
